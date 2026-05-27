@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Code Plagiarism Detector</title>
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .upload-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            border: 1px solid #555;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .upload-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        textarea {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container" id="report-content">
+
+        <div class="header-row">
+            <h1>Code Plagiarism Detection System</h1>
+            <div class="header-actions">
+                {% if session.get('username') %}
+                <span class="user-welcome">Hello, {{ session['username'] }}</span>
+                <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+                {% else %}
+                <a href="{{ url_for('index') }}" class="home-link">Back to Home</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <form method="POST">
+            <div id="dynamic-inputs" class="code-inputs"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+                {% if codes %}
+                {% for code in codes %}
+                <div class="code-container" style="position:relative;">
+                    <button type="button" class="upload-btn"
+                        onclick="document.getElementById('file{{ loop.index }}').click()">
+                        <i class="fa-solid fa-upload"></i> Upload File
+                    </button>
+                    <input type="file" id="file{{ loop.index }}" style="display: none"
+                        onchange="loadFile(this, 'code-area-{{ loop.index }}')">
+                    <textarea id="code-area-{{ loop.index }}" name="codes[]"
+                        placeholder="Paste Code {{ loop.index }} or Upload File" required
+                        spellcheck="false">{{ code }}</textarea>
+                    <button type="button" onclick="removeCodeInput(this)" style="position: absolute; right: 10px; bottom: 10px; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; z-index: 10;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <!-- Default 2 inputs -->
+                <div class="code-container" style="position:relative;">
+                    <button type="button" class="upload-btn" onclick="document.getElementById('file1').click()">
+                        <i class="fa-solid fa-upload"></i> Upload File
+                    </button>
+                    <input type="file" id="file1" style="display: none" onchange="loadFile(this, 'code-area-1')">
+                    <textarea id="code-area-1" name="codes[]" placeholder="Paste Code 1 or Upload File" required
+                        spellcheck="false"></textarea>
+                    <button type="button" onclick="removeCodeInput(this)" style="position: absolute; right: 10px; bottom: 10px; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; z-index: 10;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <div class="code-container" style="position:relative;">
+                    <button type="button" class="upload-btn" onclick="document.getElementById('file2').click()">
+                        <i class="fa-solid fa-upload"></i> Upload File
+                    </button>
+                    <input type="file" id="file2" style="display: none" onchange="loadFile(this, 'code-area-2')">
+                    <textarea id="code-area-2" name="codes[]" placeholder="Paste Code 2 or Upload File" required
+                        spellcheck="false"></textarea>
+                    <button type="button" onclick="removeCodeInput(this)" style="position: absolute; right: 10px; bottom: 10px; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; z-index: 10;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="text-align: center; margin-top: 15px; margin-bottom: 20px;">
+                <button type="button" class="btn-outline" onclick="addCodeInput()"
+                    style="padding: 10px 20px; border-radius: 8px; border: 1px dashed #1e293b; color: rgb(16, 16, 16); cursor: pointer; background: transparent;"><i
+                        class="fa-solid fa-plus"></i> Add Another Snippet</button>
+            </div>
+
+            <div class="controls" style="text-align: center; margin-bottom: 20px;">
+                <label style="font-weight: 500; cursor: pointer;color: #0c0c0c;">
+                    <input type="checkbox" name="use_ast" value="1">
+                    Use Advanced Python AST Analysis
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; max-width: 400px; margin: 0 auto;">
+                <button type="button" onclick="clearInputs()" class="btn-outline"
+                    style="padding: 16px 32px; flex: 1; border-radius: 8px; border: 1px solid #1e293b; color: rgb(82, 80, 80); cursor: pointer;">Clear</button>
+                <button type="submit"
+                    style="flex: 2; border: none; padding: 16px 32px; border-radius: 14px; font-weight: 600; cursor: pointer; background-color: #d97706; color: white;">Check
+                    Plagiarism</button>
+            </div>
+        </form>
+
+        {% if results and results|length > 0 %}
+        <div class="result animate-fade-in" style="flex-direction: column; align-items: stretch; gap: 20px;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <h3 style="margin: 0; font-size: 1.4rem;">Comparison Summary</h3>
+                    <select id="plagiarism-filter" onchange="filterResults(this.value)" style="padding: 6px 12px; border-radius: 6px; background: #0a0e17; color: white; border: 1px solid #1e293b; outline: none; cursor: pointer; font-family: inherit;">
+                        <option value="all">All Results</option>
+                        <option value="high">High Plagiarism</option>
+                        <option value="moderate">Moderate Plagiarism</option>
+                        <option value="low">Low Plagiarism</option>
+                    </select>
+                </div>
+                <button onclick="downloadPDF(this)" class="btn-primary"
+                    style="font-size: 14px; padding: 10px 18px; border:none; border-radius:8px; cursor: pointer;">
+                    <i class="fa-solid fa-file-pdf"></i> Download Report
+                </button>
+            </div>
+
+            <div
+                style="background: #0f141e; border: 1px solid #1e293b; border-radius: 8px; overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; color: white;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #1e293b; background: rgba(0,0,0,0.2);">
+                            <th style="padding: 15px 20px;">Pair</th>
+                            <th style="padding: 15px 20px;">Similarity</th>
+                            <th style="padding: 15px 20px;">Status</th>
+                            <th style="padding: 15px 20px; text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for res in results %}
+                        <tr class="result-row" data-status="{{ res.status.split(':')[0].split()[0]|lower }}" style="border-bottom: 1px solid #1e293b; page-break-inside: avoid;">
+                            <td style="padding: 15px 20px; font-weight: 500;">{{ res.pair_name }}</td>
+                            <td
+                                style="padding: 15px 20px; font-weight: bold; color: {% if res.score >= 85 %}#ef4444{% elif res.score >= 50 %}#f59e0b{% else %}#10b981{% endif %};">
+                                {{ "%.2f"|format(res.score) }}%</td>
+                            <td style="padding: 15px 20px;">
+                                <span class="status {{ res.status.split(':')[0].split()[0]|lower }}"
+                                    style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; margin: 0;">{{
+                                    res.status }}</span>
+                            </td>
+                            <td style="padding: 15px 20px; text-align: right;">
+                                <a href="#pair-{{ res.index1 }}-{{ res.index2 }}"
+                                    style="color: #d97706; text-decoration: none; font-weight: 500;">View Match
+                                    <i class="fa-solid fa-arrow-right"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="highlight-section animate-fade-in delay-100" style="margin-top: 40px;">
+            <h2 style="color: white; margin-bottom: 20px;">Detailed Matches</h2>
+            {% for res in results %}
+            <div class="result-detail" data-status="{{ res.status.split(':')[0].split()[0]|lower }}" id="pair-{{ res.index1 }}-{{ res.index2 }}"
+                style="background: #0f141e; border: 1px solid #1e293b; border-radius: 12px; padding: 25px; margin-bottom: 30px; page-break-inside: avoid;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #1e293b;">
+                    <h3 style="margin: 0; color: white;">{{ res.pair_name }}</h3>
+                    <div
+                        style="font-weight: bold; color: {% if res.score >= 85 %}#ef4444{% elif res.score >= 50 %}#f59e0b{% else %}#10b981{% endif %};">
+                        {{ "%.2f"|format(res.score) }}% Match</div>
+                </div>
+                <div class="highlight-container">
+                    <pre><code>{{ res.h1|safe }}</code></pre>
+                    <pre><code>{{ res.h2|safe }}</code></pre>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <footer>
+            Mini Project | Code Plagiarism Detection System
+        </footer>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        // File Upload Handler
+        function loadFile(input, textareaId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById(textareaId).value = e.target.result;
+                };
+                reader.readAsText(input.files[0]);
+            }
+        }
+
+        // PDF Export Handler
+        function downloadPDF(btn) {
+            if (btn) {
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+                btn.disabled = true;
+                btn.style.opacity = '0.7';
+            }
+
+            const element = document.getElementById('report-content');
+
+            // 1. Add Timestamp
+            const timestamp = document.createElement('div');
+            timestamp.id = 'pdf-timestamp';
+            timestamp.style.textAlign = 'right';
+            timestamp.style.fontSize = '12px';
+            timestamp.style.color = '#666';
+            timestamp.style.marginTop = '20px';
+            timestamp.innerText = `Report generated on: ${new Date().toLocaleString()}`;
+            element.appendChild(timestamp);
+
+            // 2. Hide UI Controls and Input Form completely
+            const uiElements = element.querySelectorAll('form, button, .header-actions, select');
+            const originalDisplays = [];
+            uiElements.forEach((el, index) => {
+                originalDisplays[index] = el.style.display;
+                el.style.display = 'none';
+            });
+
+            // 3. Disable animations to prevent low opacity bugs in PDF
+            const animatedElements = element.querySelectorAll('.animate-fade-in');
+            const originalAnimations = [];
+            animatedElements.forEach((el, index) => {
+                originalAnimations[index] = el.style.animation;
+                el.style.animation = 'none';
+                el.style.opacity = '1';
+            });
+
+            // 4. Configure Dynamic Filename and Pagination
+            const dateStr = new Date().toISOString().split('T')[0];
+            const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
+            const opt = {
+                margin: 0.5,
+                filename: `Plagiarism_Report_${dateStr}_${timeStr}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            // 5. Generate and Restore
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore UI controls
+                uiElements.forEach((el, index) => {
+                    el.style.display = originalDisplays[index];
+                });
+                // Restore animations
+                animatedElements.forEach((el, index) => {
+                    el.style.animation = originalAnimations[index];
+                    el.style.opacity = '';
+                });
+                // Remove timestamp
+                if (element.contains(timestamp)) {
+                    element.removeChild(timestamp);
+                }
+                // Restore button
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download Report';
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+        }
+
+        function clearInputs() {
+            document.querySelectorAll('textarea[name="codes[]"]').forEach(el => el.value = '');
+            document.querySelectorAll('input[type="file"]').forEach(el => el.value = '');
+        }
+
+        let inputConfigCount = document.querySelectorAll('textarea[name="codes[]"]').length || 2;
+
+        function addCodeInput() {
+            inputConfigCount++;
+            const container = document.getElementById('dynamic-inputs');
+
+            const newDiv = document.createElement('div');
+            newDiv.className = 'code-container animate-fade-in';
+            newDiv.style.position = 'relative';
+
+            newDiv.innerHTML = `
+                <button type="button" class="upload-btn" onclick="document.getElementById('file${inputConfigCount}').click()">
+                    <i class="fa-solid fa-upload"></i> Upload File
+                </button>
+                <input type="file" id="file${inputConfigCount}" style="display: none" onchange="loadFile(this, 'code-area-${inputConfigCount}')">
+                <textarea id="code-area-${inputConfigCount}" name="codes[]" placeholder="Paste Code ${inputConfigCount} or Upload File" required spellcheck="false"></textarea>
+                <button type="button" onclick="removeCodeInput(this)" style="position: absolute; right: 10px; bottom: 10px; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; z-index: 10;"><i class="fa-solid fa-trash"></i></button>
+            `;
+
+            container.appendChild(newDiv);
+        }
+
+        function removeCodeInput(btn) {
+            const containers = document.querySelectorAll('.code-container');
+            if (containers.length > 2) {
+                btn.closest('.code-container').remove();
+            } else {
+                alert("You need at least two code snippets to perform a comparison.");
+            }
+        }
+
+        // Filter Function
+        function filterResults(filterValue) {
+            const rows = document.querySelectorAll('.result-row');
+            const details = document.querySelectorAll('.result-detail');
+
+            rows.forEach(row => {
+                if (filterValue === 'all' || row.dataset.status === filterValue) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            details.forEach(detail => {
+                if (filterValue === 'all' || detail.dataset.status === filterValue) {
+                    detail.style.display = '';
+                } else {
+                    detail.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>

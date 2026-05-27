@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Code Plagiarism Detector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .eye-ball {
+            transition: transform 0.1s ease-out;
+        }
+
+        input:focus {
+            border-color: #000 !important;
+        }
+
+        #monster-svg {
+            overflow: visible !important;
+        }
+    </style>
+</head>
+
+<body class="bg-[#0a0e17] flex items-center justify-center min-h-screen font-sans p-4 text-white">
+
+    <div
+        class="bg-[#0f141e] border border-gray-800 rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden max-w-5xl w-full min-h-[600px]">
+
+        <div class="md:w-1/2 bg-[#0a0e17] relative flex items-center justify-center p-12 overflow-hidden">
+            <a href="{{ url_for('index') }}"
+                class="absolute top-8 left-8 text-gray-400 hover:text-white transition-colors font-bold z-10"><i
+                    class="fa-solid fa-arrow-left mr-2"></i>Back to Home</a>
+            <svg id="monster-svg" viewBox="0 0 400 300" class="w-full max-w-[350px]">
+                <g id="purple-group">
+                    <rect id="purple-body" x="100" y="80" width="70" height="160" rx="15" fill="#8B32FF" />
+                    <circle class="eye-ball" cx="125" cy="115" r="4" fill="black" />
+                    <circle class="eye-ball" cx="150" cy="115" r="4" fill="black" />
+                    <path class="mouth" d="M125,140 Q137.5,140 150,140" stroke="black" stroke-width="2" fill="none"
+                        stroke-linecap="round" />
+                </g>
+
+                <g id="black-group">
+                    <rect id="black-body" x="180" y="140" width="55" height="100" rx="12" fill="#1A1A1A" />
+                    <circle class="eye-ball" cx="195" cy="165" r="3.5" fill="white" />
+                    <circle class="eye-ball" cx="215" cy="165" r="3.5" fill="white" />
+                    <path class="mouth" d="M195,185 Q205,185 215,185" stroke="white" stroke-width="2" fill="none"
+                        stroke-linecap="round" />
+                </g>
+
+                <g id="orange-group">
+                    <path id="orange-body" d="M40,240 Q100,120 160,240 Z" fill="#FF7D32" />
+                    <circle class="eye-ball" cx="90" cy="210" r="3" fill="black" />
+                    <circle class="eye-ball" cx="110" cy="210" r="3" fill="black" />
+                    <path class="mouth" d="M90,225 Q100,225 110,225" stroke="black" stroke-width="2" fill="none"
+                        stroke-linecap="round" />
+                </g>
+
+                <g id="yellow-group">
+                    <path id="yellow-body" d="M240,240 Q265,140 290,240 Z" fill="#FFD700" />
+                    <circle class="eye-ball" cx="258" cy="195" r="3" fill="black" />
+                    <circle class="eye-ball" cx="272" cy="195" r="3" fill="black" />
+                    <path class="mouth" d="M258,215 Q265,215 272,215" stroke="black" stroke-width="2" fill="none"
+                        stroke-linecap="round" />
+                </g>
+            </svg>
+            <div class="absolute bottom-8 left-10 text-gray-300 font-bold text-2xl tracking-tighter"></div>
+        </div>
+
+        <div class="md:w-1/2 p-10 md:p-16 flex flex-col justify-center">
+            <div class="text-center md:text-left mb-8">
+                <div class="inline-block mb-4">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="url(#logo-grad-signup)">
+                        <defs>
+                            <linearGradient id="logo-grad-signup" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#d97706" />
+                                <stop offset="100%" stop-color="#9a3412" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M12 0l3 9h9l-7 5 3 9-8-6-8 6 3-9-7-5h9z" />
+                    </svg>
+                </div>
+                <h1 class="text-4xl font-bold text-white">Join Us!</h1>
+                <p class="text-gray-400 mt-2">Create your account today.</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(category_filter=["error"]) %}
+            {% if messages %}
+            <div class="mb-6 space-y-2">
+                <div class="p-4 rounded-xl text-sm font-medium bg-red-100 text-red-700 border border-red-200">
+                    {{ messages[0] }}
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('signup') }}" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300">Username</label>
+                    <input type="text" id="username" name="username" placeholder="jdoe" required
+                        class="w-full mt-1 px-4 py-3 bg-[#1e293b] border border-gray-700 text-white rounded-xl focus:ring-1 focus:ring-[#d97706] outline-none transition-all placeholder-gray-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300">Email</label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required
+                        class="w-full mt-1 px-4 py-3 bg-[#1e293b] border border-gray-700 text-white rounded-xl focus:ring-1 focus:ring-[#d97706] outline-none transition-all placeholder-gray-500">
+                </div>
+
+                <div class="relative">
+                    <label class="block text-sm font-semibold text-gray-300">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required
+                        class="w-full mt-1 px-4 py-3 bg-[#1e293b] border border-gray-700 text-white rounded-xl focus:ring-1 focus:ring-[#d97706] outline-none transition-all placeholder-gray-500">
+                    <button type="button" id="togglePassword" class="absolute right-4 top-[42px] text-gray-400 hover:text-white transition-colors">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-gradient-to-r from-[#d97706] to-[#9a3412] hover:from-[#f59e0b] hover:to-[#c2410c] shadow-lg shadow-orange-900/40 text-white py-3.5 rounded-xl font-bold transition-all">Sign
+                    Up</button>
+            </form>
+
+            <p class="mt-8 text-center text-sm text-gray-400">
+                Already have an account? <a href="{{ url_for('login') }}"
+                    class="font-bold text-[#d97706] hover:text-[#f59e0b] hover:underline transition-colors">Log in</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Slightly reduced logic for signup (removed complex monster interactions for username, effectively tracking mouse mainly)
+        const eyes = document.querySelectorAll('.eye-ball');
+        const mouths = document.querySelectorAll('.mouth');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const usernameInput = document.getElementById('username');
+        const toggleBtn = document.getElementById('togglePassword');
+        const monsterSVG = document.getElementById('monster-svg');
+        const allGroups = ['#purple-group', '#black-group', '#orange-group', '#yellow-group'];
+
+        let isTypingPassword = false;
+        let isJumping = false;
+
+        // 1. MOUSE TRACKING
+        document.addEventListener('mousemove', (e) => {
+            if (isTypingPassword) return;
+            eyes.forEach(eye => {
+                const rect = eye.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / 40;
+                const y = (e.clientY - rect.top) / 40;
+                gsap.to(eye, { x: x, y: y, duration: 0.2 });
+            });
+        });
+
+        // 2. EMAIL INTERACTION
+        if (emailInput) {
+            emailInput.addEventListener('focus', () => {
+                gsap.to(".mouth", {
+                    attr: {
+                        d: (i) => {
+                            if (i === 0) return "M125,140 Q137.5,155 150,140";
+                            if (i === 1) return "M195,185 Q205,200 215,185";
+                            if (i === 2) return "M90,225 Q100,235 110,225";
+                            if (i === 3) return "M258,215 Q265,225 272,215";
+                        }
+                    },
+                    duration: 0.4,
+                    ease: "back.out(3)"
+                });
+            });
+
+            emailInput.addEventListener('blur', () => {
+                gsap.to(".mouth", {
+                    attr: {
+                        d: (i) => {
+                            if (i === 0) return "M125,140 Q137.5,140 150,140";
+                            if (i === 1) return "M195,185 Q205,185 215,185";
+                            if (i === 2) return "M90,225 Q100,225 110,225";
+                            if (i === 3) return "M258,215 Q265,215 272,215";
+                        }
+                    },
+                    duration: 0.3
+                });
+            });
+        }
+
+        // 3. USERNAME INTERACTION (Simple Jump)
+        if (usernameInput) {
+            usernameInput.addEventListener('focus', () => {
+                if (isJumping) return;
+                isJumping = true;
+                gsap.to(allGroups, { y: -10, duration: 0.2, yoyo: true, repeat: 1, onComplete: () => isJumping = false });
+            });
+        }
+
+        // 4. PASSWORD INTERACTION
+        passwordInput.addEventListener('focus', () => {
+            isTypingPassword = true;
+            gsap.to("#purple-body", { scaleY: 0.85, y: 15, duration: 0.4 });
+            gsap.to("#black-body", { rotation: 5, x: -5, duration: 0.4 });
+
+            gsap.to(eyes, {
+                fill: "#FF0000",
+                x: -12,
+                y: 0,
+                duration: 0.4,
+                stagger: 0.05
+            });
+        });
+
+        passwordInput.addEventListener('blur', () => {
+            isTypingPassword = false;
+            gsap.to(["#purple-body", "#black-body"], { scaleY: 1, y: 0, x: 0, rotation: 0, duration: 0.4 });
+
+            eyes.forEach((eye, index) => {
+                let originalColor = (index === 2 || index === 3) ? "white" : "black";
+                gsap.to(eye, { fill: originalColor, x: 0, y: 0, duration: 0.3 });
+            });
+        });
+
+        // 5. PASSWORD TOGGLE
+        toggleBtn.addEventListener('click', () => {
+            const isText = passwordInput.type === 'text';
+            passwordInput.type = isText ? 'password' : 'text';
+            toggleBtn.querySelector('i').className = isText ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+
+            if (!isText) {
+                gsap.to(eyes, { fill: "#00FF00", x: 0, y: 0, scale: 1.3, duration: 0.2 });
+            } else {
+                gsap.to(eyes, { fill: "#FF0000", x: -12, y: 0, scale: 1, duration: 0.2 });
+            }
+        });
+
+        // 6. GROUP JUMP
+        monsterSVG.style.cursor = "pointer";
+        monsterSVG.addEventListener('click', () => {
+            if (isJumping) return;
+            isJumping = true;
+
+            gsap.to(allGroups, {
+                y: -35,
+                duration: 0.25,
+                yoyo: true,
+                repeat: 1,
+                ease: "power2.out",
+                stagger: 0.03,
+                onComplete: () => { isJumping = false; }
+            });
+
+            gsap.to(".eye-ball", { scale: 1.4, duration: 0.25, yoyo: true, repeat: 1 });
+
+            gsap.to(".mouth", {
+                attr: {
+                    d: (i) => {
+                        if (i === 0) return "M125,140 Q137.5,155 150,140";
+                        if (i === 1) return "M195,185 Q205,200 215,185";
+                        if (i === 2) return "M90,225 Q100,235 110,225";
+                        if (i === 3) return "M258,215 Q265,225 272,215";
+                    }
+                },
+                duration: 0.25, yoyo: true, repeat: 1, repeatDelay: 0.1
+            });
+        });
+    </script>
+</body>
+
+</html>
